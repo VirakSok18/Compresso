@@ -339,6 +339,14 @@ async function downloadBatchArchive(batchTitle, items, buttonEl) {
     const zip = new JSZip();
     const usedNames = new Set();
 
+    // Clean folder name inside the zip (e.g. "Vacation" or "Batch_1")
+    const safeFolderName = batchTitle
+      .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '_') || 'Compressed_Photos';
+
+    const rootFolder = zip.folder(safeFolderName);
+
     for (const item of items) {
       let fileName = item.name;
       let counter = 1;
@@ -352,8 +360,8 @@ async function downloadBatchArchive(batchTitle, items, buttonEl) {
       }
       usedNames.add(fileName);
 
-      // STORE compression for near-instant archiving
-      zip.file(fileName, item.blob);
+      // Store files inside the dedicated root folder
+      rootFolder.file(fileName, item.blob);
     }
 
     const zipContent = await zip.generateAsync({
@@ -361,11 +369,10 @@ async function downloadBatchArchive(batchTitle, items, buttonEl) {
       compression: 'STORE',
     });
 
-    const safeTitle = batchTitle.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
     const zipUrl = URL.createObjectURL(zipContent);
     const link = document.createElement('a');
     link.href = zipUrl;
-    link.download = `${safeTitle}_compresso.zip`;
+    link.download = `${safeFolderName}.zip`;
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
