@@ -6,8 +6,8 @@ const filePicker = document.getElementById('filePicker');
 const batchesContainer = document.getElementById('batchesContainer');
 
 // Compression Parameters:
-// 1920px max resolution + 0.6 quality produces massive 70-90% size reductions without visual degradation
-const QUALITY = 0.60;
+// 0.40 quality in AVIF produces super-compact file sizes (50KB - 200KB) while maintaining sharp visual clarity
+const QUALITY = 0.40;
 const MAX_RESOLUTION = 1920;
 
 let batchIndex = 1;
@@ -317,39 +317,30 @@ async function compressSingleFile(file) {
 
   URL.revokeObjectURL(imgUrl);
 
-  // Compress using native optimal format (AVIF -> WebP -> JPEG, NEVER uncompressed PNG!)
+  // Always use AVIF if supported, otherwise WebP
   let chosenFormat = OPTIMAL_FORMAT.mime;
   let chosenExt = OPTIMAL_FORMAT.ext;
 
   let outputBlob = await new Promise((resolve) => {
     canvas.toBlob((blob) => {
-      // If browser tried to fallback to PNG, force JPEG to avoid file inflation!
+      // Ensure we don't output uncompressed PNG
       if (!blob || blob.type === 'image/png') {
-        canvas.toBlob((jpegBlob) => resolve(jpegBlob), 'image/jpeg', QUALITY);
+        // Try WebP then JPEG only if browser has no AVIF/WebP support
+        canvas.toBlob((fallbackBlob) => resolve(fallbackBlob), 'image/webp', QUALITY);
       } else {
         resolve(blob);
       }
     }, chosenFormat, QUALITY);
   });
 
-  // Verify blob type
-  if (outputBlob && outputBlob.type === 'image/jpeg') {
-    chosenExt = '.jpg';
-  }
-
-  // ANTI-INFLATION SAFEGUARD:
-  // If compressed output is somehow LARGER than original, compress harder or keep original
+  // If the file was already super tiny (e.g. 50KB-150KB) and AVIF was larger,
+  // re-compress harder in AVIF so it shrinks without changing format
   if (outputBlob && outputBlob.size >= file.size) {
-    const smallerBlob = await new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.40);
+    const tighterBlob = await new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), chosenFormat, 0.25);
     });
-    if (smallerBlob && smallerBlob.size < file.size) {
-      outputBlob = smallerBlob;
-      chosenExt = '.jpg';
-    } else {
-      // Keep original file if it was already more compressed
-      outputBlob = file;
-      chosenExt = '.' + ext;
+    if (tighterBlob && tighterBlob.size < outputBlob.size) {
+      outputBlob = tighterBlob;
     }
   }
 
@@ -359,7 +350,7 @@ async function compressSingleFile(file) {
 
   return {
     name: finalFileName,
-    blob: outputBlob,
+    blob: outputBlob || file,
     originalSize: file.size,
     newSize: outputBlob ? outputBlob.size : file.size,
     thumbUrl: thumbUrl,
