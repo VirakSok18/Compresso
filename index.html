@@ -10,7 +10,7 @@
   <script>if (typeof JSZip === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\\/script>'); }</script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
-  <!-- Ultra-Clean Minimal Apple Design -->
+  <!-- Ultra-Clean Apple Design System -->
   <style>
     :root {
       --bg: #FBFBFD;
@@ -19,16 +19,20 @@
       --border: rgba(0, 0, 0, 0.08);
       --border-subtle: rgba(0, 0, 0, 0.04);
       --text: #1D1D1F;
-      --text-secondary: #86868B;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #86868B;
       --blue: #0071E3;
       --blue-hover: #0077ED;
       --blue-light: #F0F6FF;
       --blue-border: #CCE1FF;
+      --green: #34C759;
+      --green-light: #E8F8ED;
       --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
       --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
       --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
       --radius-lg: 24px;
-      --radius-md: 14px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
     }
 
     * {
@@ -174,198 +178,111 @@
       margin-top: 2px;
     }
 
-    /* Results Section */
-    .results-wrapper {
+    /* Batches Container */
+    .batches-container {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
       margin-top: 8px;
     }
 
-    .results-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 4px;
-    }
-
-    .results-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .count-badge {
-      font-size: 11px;
-      background: var(--surface-muted);
-      color: var(--text-secondary);
-      padding: 1px 8px;
-      border-radius: 999px;
-      font-family: monospace;
-    }
-
-    .clear-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 12px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: color 0.15s ease;
-      font-family: inherit;
-    }
-
-    .clear-btn:hover {
-      color: var(--text);
-    }
-
-    .results-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .result-row {
+    /* Batch Card (Clean Apple Section) */
+    .batch-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 12px 16px;
+      padding: 20px;
+      box-shadow: var(--shadow-card);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: var(--shadow-sm);
-      animation: fadeIn 0.25s ease-out;
+      flex-direction: column;
+      gap: 16px;
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .result-left {
+    .batch-header {
       display: flex;
-      align-items: center;
-      gap: 14px;
-      min-width: 0;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
     }
 
-    .thumb-box {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: var(--surface-muted);
-      border: 1px solid var(--border-subtle);
-      overflow: hidden;
-      flex-shrink: 0;
+    .batch-title-group {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+      gap: 3px;
     }
 
-    .thumb-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .result-meta {
-      min-width: 0;
-    }
-
-    .result-filename {
-      font-size: 13px;
+    .batch-title {
+      font-size: 16px;
       font-weight: 600;
       color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 280px;
-    }
-
-    .result-stats {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 11px;
-      font-family: monospace;
-      color: var(--text-secondary);
-      margin-top: 2px;
     }
 
-    .saved-pill {
+    .batch-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .batch-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
       background: var(--blue-light);
       color: var(--blue);
       border: 1px solid var(--blue-border);
-      font-weight: 600;
-      padding: 1px 6px;
-      border-radius: 4px;
+      font-family: monospace;
     }
 
-    .save-button {
+    .batch-badge.completed {
+      background: var(--green-light);
+      color: var(--green);
+      border-color: rgba(52, 199, 89, 0.2);
+    }
+
+    /* Smooth Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 8px;
       background: var(--surface-muted);
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 7px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: inherit;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
     }
 
-    .save-button:hover {
+    .progress-fill {
+      height: 100%;
+      width: 0%;
       background: var(--blue);
-      color: #FFFFFF;
-      border-color: var(--blue);
+      border-radius: 999px;
+      transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
     }
 
-    .save-button:active {
-      transform: scale(0.96);
+    .progress-fill.completed {
+      background: var(--green);
     }
 
-    /* Floating Dynamic Bottom Bar */
-    .floating-bar {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translate(-50%, 100px);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 40;
-      width: calc(100% - 48px);
-      max-width: 520px;
-    }
-
-    .floating-bar.visible {
-      transform: translate(-50%, 0);
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .floating-bar-inner {
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(25px) saturate(190%);
-      -webkit-backdrop-filter: blur(25px) saturate(190%);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 18px;
-      padding: 12px 18px;
-      box-shadow: var(--shadow-float);
+    /* Stats & Action Row */
+    .batch-footer {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      align-items: center;
+      gap: 12px;
+      padding-top: 4px;
     }
 
-    .floating-stats {
+    .batch-stats {
       font-size: 12px;
       font-family: monospace;
       color: var(--text-secondary);
@@ -374,11 +291,11 @@
       gap: 6px;
     }
 
-    .floating-stats strong {
+    .batch-stats strong {
       color: var(--text);
     }
 
-    .zip-btn {
+    .download-batch-btn {
       background: var(--blue);
       color: #FFFFFF;
       border: none;
@@ -390,18 +307,49 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 1px 3px rgba(0, 113, 227, 0.3);
+      box-shadow: 0 1px 3px rgba(0, 113, 227, 0.25);
       transition: all 0.15s ease;
       font-family: inherit;
-      white-space: nowrap;
     }
 
-    .zip-btn:hover {
+    .download-batch-btn:hover:not(:disabled) {
       background: var(--blue-hover);
     }
 
-    .zip-btn:active {
+    .download-batch-btn:active:not(:disabled) {
       transform: scale(0.96);
+    }
+
+    .download-batch-btn:disabled {
+      background: var(--surface-muted);
+      color: var(--text-tertiary);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* Collapsible Preview Thumbnails */
+    .batch-thumbs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
+      scrollbar-width: thin;
+    }
+
+    .batch-thumb-item {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .batch-thumb-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   </style>
 </head>
@@ -428,7 +376,7 @@
     <!-- Clean Headline -->
     <div class="hero">
       <h1>Compress images.</h1>
-      <p>Drop photos here to shrink up to 95% in AVIF. Fast, private, in-browser.</p>
+      <p>Drop folders or photos to convert to AVIF. Clean batches, live progress, instant download.</p>
     </div>
 
     <!-- Drop Zone -->
@@ -441,47 +389,16 @@
         </svg>
       </div>
       <div>
-        <div class="drop-title">Drop photos here, or <span>browse</span></div>
+        <div class="drop-title">Drop folders or photos here, or <span>browse</span></div>
         <div class="drop-subtitle">iPhone HEIC, JPEG, PNG, WebP</div>
       </div>
       <input type="file" id="filePicker" multiple accept="image/*,.heic,.heif" style="display: none;">
     </div>
 
-    <!-- Results Section (Visible only when photos are added) -->
-    <div id="resultsWrapper" class="results-wrapper" style="display: none;">
-      <div class="results-header">
-        <div class="results-title">
-          <span>Processed Images</span>
-          <span id="processedBadge" class="count-badge">0</span>
-        </div>
-        <button id="clearAllBtn" class="clear-btn">Clear All</button>
-      </div>
-
-      <div id="resultsList" class="results-list"></div>
-    </div>
+    <!-- Batches Feed (Each drop gets its own dedicated card) -->
+    <div id="batchesContainer" class="batches-container"></div>
 
   </main>
-
-  <!-- Floating Dynamic Island Action Bar -->
-  <div id="floatingBar" class="floating-bar">
-    <div class="floating-bar-inner">
-      <div class="floating-stats">
-        <span id="statBefore">0 MB</span>
-        <span>→</span>
-        <strong id="statAfter">0 MB</strong>
-        <span id="statSaved" class="saved-pill">0%</span>
-      </div>
-
-      <button id="downloadZipBtn" class="zip-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        <span>Download All (.zip)</span>
-      </button>
-    </div>
-  </div>
 
   <script src="app.js"></script>
 </body>
