@@ -1,47 +1,75 @@
+// Compresso — Apple-Inspired Client-Side AVIF Converter
+// Adheres to Apple Human Interface Guidelines and Emil Kowalski's Fluid Interface design principles
+
 const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const qualityInput = document.getElementById('qualityInput');
-const qualityVal = document.getElementById('qualityVal');
-const maxResSelect = document.getElementById('maxResSelect');
-const stripMetaCheckbox = document.getElementById('stripMetaCheckbox');
-const actionToolbar = document.getElementById('actionToolbar');
+const filePicker = document.getElementById('filePicker');
+const qualitySlider = document.getElementById('qualitySlider');
+const qualityLabel = document.getElementById('qualityLabel');
+const stripExif = document.getElementById('stripExif');
+const resultsWrapper = document.getElementById('resultsWrapper');
 const resultsList = document.getElementById('resultsList');
-const totalCount = document.getElementById('totalCount');
-const totalOriginalSize = document.getElementById('totalOriginalSize');
-const totalNewSize = document.getElementById('totalNewSize');
-const totalSavings = document.getElementById('totalSavings');
-const clearBtn = document.getElementById('clearBtn');
-const downloadAllBtn = document.getElementById('downloadAllBtn');
+const processedBadge = document.getElementById('processedBadge');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const floatingBar = document.getElementById('floatingBar');
+const statBefore = document.getElementById('statBefore');
+const statAfter = document.getElementById('statAfter');
+const statSaved = document.getElementById('statSaved');
+const downloadZipBtn = document.getElementById('downloadZipBtn');
+const segmentBtns = document.querySelectorAll('.segment-btn');
 
+let activeResolution = '2560';
 let processedFiles = [];
-let totalBeforeBytes = 0;
-let totalAfterBytes = 0;
+let totalInputBytes = 0;
+let totalOutputBytes = 0;
 
-// Quality Slider Label
-qualityInput.addEventListener('input', (e) => {
-  const v = e.target.value;
-  qualityVal.textContent = `${v}% (${v <= 45 ? 'Maximum Compression' : v <= 65 ? 'Recommended' : 'High Quality'})`;
+// 1. Resolution Segmented Control (Apple Pill Slider)
+segmentBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    segmentBtns.forEach(b => b.classList.remove('active', 'font-semibold'));
+    btn.classList.add('active', 'font-semibold');
+    activeResolution = btn.dataset.res;
+  });
 });
 
-// Drag & Drop
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.classList.add('border-indigo-500', 'bg-slate-900/80');
+// 2. Tactile Quality Slider Feedback
+qualitySlider.addEventListener('input', (e) => {
+  const val = parseInt(e.target.value, 10);
+  let descriptor = 'Recommended';
+  if (val <= 35) descriptor = 'Maximum Squeeze';
+  else if (val <= 45) descriptor = 'Compact';
+  else if (val <= 60) descriptor = 'Recommended';
+  else if (val <= 75) descriptor = 'High Clarity';
+  else descriptor = 'Near Lossless';
+
+  qualityLabel.textContent = `${val}% (${descriptor})`;
 });
-dropZone.addEventListener('dragleave', () => {
-  dropZone.classList.remove('border-indigo-500', 'bg-slate-900/80');
+
+// 3. Fluid Drag & Drop Handling (Direct Manipulation)
+dropZone.addEventListener('click', () => filePicker.click());
+
+['dragenter', 'dragover'].forEach(eventName => {
+  dropZone.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    dropZone.classList.add('border-apple-blue', 'bg-apple-blueLight/30', 'scale-[0.995]');
+  });
 });
+
+['dragleave', 'drop'].forEach(eventName => {
+  dropZone.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-apple-blue', 'bg-apple-blueLight/30', 'scale-[0.995]');
+  });
+});
+
 dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('border-indigo-500', 'bg-slate-900/80');
   if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    handleFiles(Array.from(e.dataTransfer.files));
+    handleBatchUpload(Array.from(e.dataTransfer.files));
   }
 });
-fileInput.addEventListener('change', (e) => {
+
+filePicker.addEventListener('change', (e) => {
   if (e.target.files && e.target.files.length > 0) {
-    handleFiles(Array.from(e.target.files));
+    handleBatchUpload(Array.from(e.target.files));
   }
 });
 
@@ -51,35 +79,40 @@ function formatBytes(bytes) {
   return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
-async function handleFiles(files) {
-  actionToolbar.classList.remove('hidden');
+// 4. Batch Pipeline
+async function handleBatchUpload(files) {
+  resultsWrapper.classList.remove('hidden');
 
   for (const file of files) {
-    await processOneFile(file);
+    await processSingleImage(file);
   }
 }
 
-async function processOneFile(file) {
-  const quality = parseInt(qualityInput.value, 10) / 100;
-  const maxRes = maxResSelect.value;
-  const rowId = 'file-' + Math.random().toString(36).substring(2, 9);
+// 5. Single Image Processing Pipeline
+async function processSingleImage(file) {
+  const quality = parseInt(qualitySlider.value, 10) / 100;
+  const rowId = 'row-' + Math.random().toString(36).substring(2, 9);
+  const ext = file.name.split('.').pop().toLowerCase();
 
-  // Render pending row
+  // Create Apple-Style Card Placeholder
   const row = document.createElement('div');
   row.id = rowId;
-  row.className = 'bg-slate-900 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between text-xs transition';
+  row.className = 'glass-panel bg-white p-3.5 rounded-2xl shadow-apple-card flex items-center justify-between gap-4 transition-all duration-300';
   row.innerHTML = `
-    <div class="flex items-center gap-3 min-w-0">
-      <div class="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-slate-400 font-mono text-[10px] shrink-0">
-        ${file.name.split('.').pop().toUpperCase().slice(0, 4)}
+    <div class="flex items-center gap-3.5 min-w-0">
+      <div class="w-12 h-12 rounded-xl bg-apple-surfaceMuted flex items-center justify-center text-apple-tertiary text-xs shrink-0 font-medium">
+        <svg class="animate-spin text-apple-blue w-5 h-5" viewBox="0 0 24 24" fill="none">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
       </div>
       <div class="min-w-0">
-        <p class="font-medium text-slate-200 truncate max-w-xs md:max-w-md">${file.name}</p>
-        <p class="text-slate-500 text-[11px]">${formatBytes(file.size)}</p>
+        <p class="font-medium text-xs text-apple-text truncate max-w-xs md:max-w-md">${file.name}</p>
+        <p class="text-[11px] text-apple-secondary font-mono mt-0.5">${formatBytes(file.size)} • Processing</p>
       </div>
     </div>
-    <div class="flex items-center gap-3">
-      <span class="text-indigo-400 animate-pulse text-[11px]">Compressing...</span>
+    <div class="flex items-center gap-2">
+      <span class="text-[11px] text-apple-blue font-medium animate-pulse">Compressing</span>
     </div>
   `;
   resultsList.prepend(row);
@@ -87,16 +120,15 @@ async function processOneFile(file) {
   try {
     let sourceBlob = file;
 
-    // Handle iPhone HEIC decoding
-    const ext = file.name.split('.').pop().toLowerCase();
+    // Decode iPhone HEIC/HEIF in browser
     if (ext === 'heic' || ext === 'heif') {
       if (typeof heic2any !== 'undefined') {
-        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
         sourceBlob = Array.isArray(converted) ? converted[0] : converted;
       }
     }
 
-    // Load into Image Bitmap / HTML Image
+    // Load into HTML Image
     const imgUrl = URL.createObjectURL(sourceBlob);
     const img = new Image();
     await new Promise((resolve, reject) => {
@@ -105,12 +137,12 @@ async function processOneFile(file) {
       img.src = imgUrl;
     });
 
-    // Calculate dimensions (Max-Width downscaling)
+    // Smart Clamping / Downscaling
     let width = img.naturalWidth || img.width;
     let height = img.naturalHeight || img.height;
 
-    if (maxRes !== 'original') {
-      const maxLimit = parseInt(maxRes, 10);
+    if (activeResolution !== 'original') {
+      const maxLimit = parseInt(activeResolution, 10);
       if (width > maxLimit || height > maxLimit) {
         if (width >= height) {
           height = Math.round((height * maxLimit) / width);
@@ -122,7 +154,7 @@ async function processOneFile(file) {
       }
     }
 
-    // Render to Canvas (automatically strips EXIF metadata!)
+    // Render to Canvas (Strips metadata automatically)
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -131,98 +163,124 @@ async function processOneFile(file) {
 
     URL.revokeObjectURL(imgUrl);
 
-    // Convert to AVIF (or fallback to WebP if browser canvas lacks AVIF encoder)
+    // Convert to AVIF (or graceful WebP fallback if browser lacks native AVIF encode)
     let outputFormat = 'image/avif';
     let outputExt = '.avif';
 
-    let avifBlob = await new Promise((resolve) => {
+    let outputBlob = await new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), outputFormat, quality);
     });
 
-    // Fallback if browser canvas does not natively support AVIF encode
-    if (!avifBlob || avifBlob.type !== 'image/avif') {
+    if (!outputBlob || outputBlob.type !== 'image/avif') {
       outputFormat = 'image/webp';
       outputExt = '.webp';
-      avifBlob = await new Promise((resolve) => {
+      outputBlob = await new Promise((resolve) => {
         canvas.toBlob((blob) => resolve(blob), outputFormat, quality);
       });
     }
 
-    const newSize = avifBlob.size;
     const originalSize = file.size;
-    const savings = (((originalSize - newSize) / originalSize) * 100).toFixed(1);
+    const newSize = outputBlob.size;
+    const savedPercent = (((originalSize - newSize) / originalSize) * 100).toFixed(1);
 
-    totalBeforeBytes += originalSize;
-    totalAfterBytes += newSize;
-    updateGlobalStats();
+    totalInputBytes += originalSize;
+    totalOutputBytes += newSize;
 
-    const outputFileName = file.name.replace(/\.[^/.]+$/, "") + outputExt;
-    const downloadUrl = URL.createObjectURL(avifBlob);
+    const baseName = file.name.replace(/\.[^/.]+$/, "");
+    const finalFileName = `${baseName}${outputExt}`;
+    const downloadUrl = URL.createObjectURL(outputBlob);
 
     processedFiles.push({
-      name: outputFileName,
-      blob: avifBlob,
+      name: finalFileName,
+      blob: outputBlob,
     });
 
-    // Update row with finished state
+    updateGlobalStats();
+
+    // Render live thumbnail
+    const thumbUrl = canvas.toDataURL('image/jpeg', 0.6);
+
+    // Update with Apple Card styling
     row.innerHTML = `
-      <div class="flex items-center gap-3 min-w-0">
-        <div class="w-8 h-8 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-mono text-[10px] shrink-0 font-bold">
-          AVIF
+      <div class="flex items-center gap-3.5 min-w-0">
+        <div class="w-12 h-12 rounded-xl bg-apple-surfaceMuted overflow-hidden border border-black/[0.06] shrink-0 relative">
+          <img src="${thumbUrl}" alt="Preview" class="w-full h-full object-cover">
         </div>
         <div class="min-w-0">
-          <p class="font-medium text-slate-200 truncate max-w-xs md:max-w-md">${outputFileName}</p>
-          <div class="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+          <p class="font-medium text-xs text-apple-text truncate max-w-xs md:max-w-md">${finalFileName}</p>
+          <div class="flex items-center gap-2 text-[11px] text-apple-secondary font-mono mt-0.5">
             <span>${formatBytes(originalSize)}</span>
-            <span>→</span>
-            <span class="text-emerald-400 font-bold">${formatBytes(newSize)}</span>
-            <span class="text-indigo-400">(${savings}% saved)</span>
+            <span class="text-apple-tertiary">→</span>
+            <span class="font-semibold text-apple-text">${formatBytes(newSize)}</span>
+            <span class="text-apple-blue font-semibold bg-apple-blueLight px-1.5 py-0.2 rounded border border-apple-blueBorder">-${savedPercent}%</span>
           </div>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a href="${downloadUrl}" download="${outputFileName}" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition">
-          Download
+        <a href="${downloadUrl}" download="${finalFileName}" class="apple-btn px-3 py-1.5 rounded-lg bg-apple-surfaceMuted hover:bg-apple-blue hover:text-white text-apple-text text-xs font-medium flex items-center gap-1.5 transition">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Save</span>
         </a>
       </div>
     `;
+
   } catch (err) {
     row.innerHTML = `
-      <div class="flex items-center gap-3 min-w-0 text-red-400">
-        <span>✖</span>
-        <span class="truncate">${file.name}: ${err.message || 'Conversion failed'}</span>
+      <div class="flex items-center gap-3 text-red-500 text-xs">
+        <span>⚠</span>
+        <span class="truncate">${file.name}: ${err.message || 'Compression error'}</span>
       </div>
     `;
   }
 }
 
+// 6. Global Stats & Dynamic Island Bottom Bar
 function updateGlobalStats() {
-  totalCount.textContent = processedFiles.length;
-  totalOriginalSize.textContent = formatBytes(totalBeforeBytes);
-  totalNewSize.textContent = formatBytes(totalAfterBytes);
+  processedBadge.textContent = processedFiles.length;
+  statBefore.textContent = formatBytes(totalInputBytes);
+  statAfter.textContent = formatBytes(totalOutputBytes);
 
-  if (totalBeforeBytes > 0) {
-    const saved = (((totalBeforeBytes - totalAfterBytes) / totalBeforeBytes) * 100).toFixed(1);
-    totalSavings.textContent = `${saved}%`;
+  if (totalInputBytes > 0) {
+    const totalSavedPct = (((totalInputBytes - totalOutputBytes) / totalInputBytes) * 100).toFixed(1);
+    statSaved.textContent = `-${totalSavedPct}%`;
+  }
+
+  // Materialize floating bottom bar
+  if (processedFiles.length > 0) {
+    floatingBar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+    floatingBar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
   }
 }
 
-// Clear All
-clearBtn.addEventListener('click', () => {
+// 7. Clear All
+clearAllBtn.addEventListener('click', () => {
   processedFiles = [];
-  totalBeforeBytes = 0;
-  totalAfterBytes = 0;
+  totalInputBytes = 0;
+  totalOutputBytes = 0;
   resultsList.innerHTML = '';
-  actionToolbar.classList.add('hidden');
-  fileInput.value = '';
+  resultsWrapper.classList.add('hidden');
+  filePicker.value = '';
+
+  floatingBar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+  floatingBar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
 });
 
-// Download All as ZIP
-downloadAllBtn.addEventListener('click', async () => {
+// 8. Download All as ZIP (Bundled seamlessly)
+downloadZipBtn.addEventListener('click', async () => {
   if (processedFiles.length === 0) return;
 
-  downloadAllBtn.disabled = true;
-  downloadAllBtn.innerHTML = `<span>⏳</span> Zipping...`;
+  downloadZipBtn.disabled = true;
+  downloadZipBtn.innerHTML = `
+    <svg class="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+    </svg>
+    <span>Creating Archive...</span>
+  `;
 
   try {
     const zip = new JSZip();
@@ -230,18 +288,24 @@ downloadAllBtn.addEventListener('click', async () => {
       zip.file(item.name, item.blob);
     }
 
-    const content = await zip.generateAsync({ type: 'blob' });
-    const zipUrl = URL.createObjectURL(content);
-    const link = document.createElement('a');
-    link.href = zipUrl;
-    link.download = `compressed_photos_${Date.now()}.zip`;
-    link.click();
+    const zipContent = await zip.generateAsync({ type: 'blob' });
+    const zipUrl = URL.createObjectURL(zipContent);
+    const a = document.createElement('a');
+    a.href = zipUrl;
+    a.download = `compresso_${Date.now()}.zip`;
+    a.click();
     URL.revokeObjectURL(zipUrl);
   } catch (err) {
-    alert('Failed to generate ZIP: ' + err.message);
+    alert('ZIP generation failed: ' + err.message);
   } finally {
-    downloadAllBtn.disabled = false;
-    downloadAllBtn.innerHTML = `<span>📦</span> Download All (ZIP)`;
+    downloadZipBtn.disabled = false;
+    downloadZipBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      <span>Download All (.zip)</span>
+    `;
   }
 });
-

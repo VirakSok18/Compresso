@@ -1,142 +1,335 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultra AVIF Squeezer | Free Client-Side Image Compressor</title>
+  <title>Compresso — Ultra-Clean Image Squeezer</title>
+  
+  <!-- Apple System Font & Modern CDN Assets -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            brand: '#6366f1',
-            brandDark: '#4f46e5',
+            apple: {
+              bg: '#FBFBFD',
+              surface: '#FFFFFF',
+              surfaceMuted: '#F5F5F7',
+              border: 'rgba(0, 0, 0, 0.08)',
+              borderFocus: 'rgba(0, 113, 227, 0.35)',
+              text: '#1D1D1F',
+              secondary: '#6E6E73',
+              tertiary: '#86868B',
+              blue: '#0071E3',
+              blueHover: '#0077ED',
+              blueLight: '#F0F6FF',
+              blueBorder: '#CCE1FF',
+              green: '#34C759',
+              greenLight: '#E8F8ED',
+            }
+          },
+          fontFamily: {
+            sans: [
+              '-apple-system',
+              'BlinkMacSystemFont',
+              '"SF Pro Display"',
+              '"SF Pro Text"',
+              '"SF Pro"',
+              'system-ui',
+              '-apple-system-subheading',
+              'sans-serif'
+            ]
+          },
+          boxShadow: {
+            'apple-sm': '0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02)',
+            'apple-card': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.04)',
+            'apple-float': '0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05)',
+            'apple-button': '0 1px 2px rgba(0, 113, 227, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
           }
         }
       }
     }
   </script>
+
   <style>
-    .gradient-border {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.2));
+    /* Apple Typography - Optical Tracking & Sizing */
+    body {
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #FBFBFD;
+      color: #1D1D1F;
+    }
+
+    h1 {
+      letter-spacing: -0.035em;
+    }
+
+    .tracking-tight-apple {
+      letter-spacing: -0.015em;
+    }
+
+    /* Apple-style spring tactile buttons */
+    .apple-btn {
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), 
+                  background-color 0.15s ease, 
+                  box-shadow 0.15s ease, 
+                  opacity 0.15s ease;
+    }
+    .apple-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* iOS-style custom slider track */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: #E5E5EA;
+      border-radius: 999px;
+      transition: background 0.2s ease;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.06);
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -7px;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.08);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(0,0,0,0.08);
+    }
+    input[type=range]::-webkit-slider-thumb:active {
+      transform: scale(1.15);
+      background: #FAFAFA;
+    }
+
+    /* Translucent Frosted Glass Chrome */
+    .glass-nav {
+      background: rgba(251, 251, 253, 0.82);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(25px) saturate(190%);
+      -webkit-backdrop-filter: blur(25px) saturate(190%);
+      border: 1px solid rgba(0, 0, 0, 0.07);
+    }
+
+    /* Segmented pill control */
+    .segment-btn {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .segment-btn.active {
+      background: #FFFFFF;
+      color: #1D1D1F;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      .apple-btn, input[type=range]::-webkit-slider-thumb, .segment-btn {
+        transition: none !important;
+        transform: none !important;
+      }
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen flex flex-col font-sans selection:bg-apple-blueLight selection:text-apple-blue">
 
-  <!-- Header -->
-  <header class="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
-          ⚡
+  <!-- Apple Navigation Bar -->
+  <header class="glass-nav sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-apple-blue flex items-center justify-center text-white font-bold text-xs shadow-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 14 10 14 10 20"></polyline>
+            <polyline points="20 10 14 10 14 4"></polyline>
+            <line x1="14" y1="10" x2="21" y2="3"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
         </div>
-        <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Ultra AVIF Squeezer</span>
+        <span class="font-semibold text-[15px] tracking-tight-apple text-apple-text">Compresso</span>
+        <span class="text-[11px] text-apple-tertiary px-2 py-0.5 rounded-full bg-apple-surfaceMuted font-medium">AVIF</span>
       </div>
-      <div class="flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          100% Free & In-Browser
-        </span>
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-apple-blueLight border border-apple-blueBorder text-apple-blue text-[11px] font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-apple-blue animate-pulse"></span>
+          100% In-Browser & Private
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
+  <!-- Content Container -->
+  <main class="max-w-4xl mx-auto px-6 py-10 flex-1 w-full space-y-8">
 
-    <!-- Hero / Pitch -->
-    <div class="text-center space-y-2 py-4">
-      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
-        Shrink Photos by <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">up to 95%</span>
+    <!-- Hero Title -->
+    <div class="text-center space-y-3 pt-2 pb-1">
+      <h1 class="text-4xl md:text-5xl font-semibold tracking-tight text-apple-text">
+        Pure compression. <span class="text-apple-blue">Zero compromise.</span>
       </h1>
-      <p class="text-slate-400 text-sm md:text-base max-w-xl mx-auto">
-        Converts iPhone HEIC, JPEG, PNG, and WebP into ultra-compact AVIF. No server uploads, zero cost, completely private.
+      <p class="text-apple-secondary text-base md:text-lg max-w-lg mx-auto font-normal leading-relaxed">
+        Squeeze iPhone HEIC, JPEG, PNG, and WebP by up to 95%. Everything happens directly in your browser.
       </p>
     </div>
 
-    <!-- Controls Card -->
-    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Quality Setting -->
-      <div class="space-y-2">
-        <div class="flex justify-between text-xs font-semibold">
-          <label class="text-slate-300">Compression Quality</label>
-          <span id="qualityVal" class="text-indigo-400 font-mono">50% (Recommended)</span>
+    <!-- Apple-Style Settings Card -->
+    <div class="glass-panel rounded-2xl p-6 shadow-apple-card space-y-6">
+      
+      <!-- Top Row: Segmented Resolution & Quality Slider -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        
+        <!-- Resolution Segmented Control -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs font-medium text-apple-secondary">
+            <span>Target Resolution</span>
+            <span class="text-[11px] text-apple-tertiary">Smart Downscale</span>
+          </div>
+          <div class="grid grid-cols-4 bg-apple-surfaceMuted p-1 rounded-xl text-xs font-medium text-apple-secondary">
+            <button type="button" data-res="2560" class="segment-btn active py-1.5 rounded-lg text-center font-semibold">2K (2560)</button>
+            <button type="button" data-res="1920" class="segment-btn py-1.5 rounded-lg text-center">1080p</button>
+            <button type="button" data-res="3840" class="segment-btn py-1.5 rounded-lg text-center">4K</button>
+            <button type="button" data-res="original" class="segment-btn py-1.5 rounded-lg text-center">Original</button>
+          </div>
         </div>
-        <input type="range" id="qualityInput" min="20" max="90" value="50" 
-          class="w-full accent-indigo-500 cursor-pointer h-2 bg-slate-800 rounded-lg">
-        <p class="text-[11px] text-slate-500">50% preserves high clarity while cutting file size by ~90%.</p>
+
+        <!-- Tactile Quality Slider -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs font-medium text-apple-secondary">
+            <span>Image Quality</span>
+            <span id="qualityLabel" class="font-mono text-apple-blue font-semibold text-xs bg-apple-blueLight px-2 py-0.5 rounded-md border border-apple-blueBorder">
+              50% (Recommended)
+            </span>
+          </div>
+          <div class="pt-1">
+            <input type="range" id="qualitySlider" min="20" max="85" value="50" class="w-full">
+          </div>
+          <div class="flex justify-between text-[11px] text-apple-tertiary">
+            <span>Smaller File</span>
+            <span>Perfection</span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Max Resolution -->
-      <div class="space-y-2">
-        <div class="flex justify-between text-xs font-semibold">
-          <label class="text-slate-300">Max Resolution (Resize)</label>
-        </div>
-        <select id="maxResSelect" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <option value="2560" selected>2560px (2K) - Best Balance for Screens</option>
-          <option value="1920">1920px (1080p Full HD) - Smallest File Size</option>
-          <option value="3840">3840px (4K Ultra HD)</option>
-          <option value="original">Original (No Downscaling)</option>
-        </select>
-        <p class="text-[11px] text-slate-500">Capping resolution removes invisible megapixels.</p>
-      </div>
+      <!-- Divider -->
+      <div class="h-px bg-black/[0.05]"></div>
 
-      <!-- Strip Metadata -->
-      <div class="space-y-2 flex flex-col justify-between">
-        <div class="flex justify-between text-xs font-semibold">
-          <label class="text-slate-300">Privacy & Cleanup</label>
+      <!-- Bottom Row: EXIF Strip Toggle & Status -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-apple-surfaceMuted flex items-center justify-center text-apple-secondary text-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-apple-text">Remove Camera & GPS Metadata</p>
+            <p class="text-[11px] text-apple-secondary">Strips location tags, camera serials, and unneeded color profiles</p>
+          </div>
         </div>
-        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 bg-slate-800/60 p-2 rounded-lg border border-slate-700/60 hover:bg-slate-800">
-          <input type="checkbox" id="stripMetaCheckbox" checked class="accent-indigo-500 rounded w-4 h-4">
-          <span>Strip EXIF Data (GPS, Camera info)</span>
+
+        <!-- iOS Switch -->
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="stripExif" checked class="sr-only peer">
+          <div class="w-11 h-6 bg-apple-surfaceMuted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm peer-checked:bg-apple-blue"></div>
         </label>
-        <p class="text-[11px] text-slate-500">Removes hidden camera metadata to save another 50-100KB per image.</p>
       </div>
+
     </div>
 
-    <!-- Drop Zone -->
-    <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-indigo-500/80 bg-slate-900/40 hover:bg-slate-900/80 rounded-2xl p-10 text-center transition cursor-pointer flex flex-col items-center justify-center gap-3 group">
-      <div class="w-14 h-14 rounded-full bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl transition">
-        📂
+    <!-- Apple-Style Drag & Drop Zone -->
+    <div id="dropZone" class="group relative bg-apple-surface border border-dashed border-black/[0.12] hover:border-apple-blue/70 rounded-3xl p-12 text-center transition-all duration-300 cursor-pointer shadow-apple-sm hover:shadow-apple-card flex flex-col items-center justify-center gap-4">
+      
+      <!-- Icon with soft Apple Blue circle -->
+      <div class="w-16 h-16 rounded-2xl bg-apple-blueLight border border-apple-blueBorder text-apple-blue flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-105">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
       </div>
-      <div>
-        <p class="font-semibold text-slate-200 text-base">Drag & drop your photos here, or <span class="text-indigo-400 underline">browse files</span></p>
-        <p class="text-xs text-slate-500 mt-1">Supports iPhone .HEIC, .JPG, .PNG, .WEBP</p>
+
+      <div class="space-y-1">
+        <p class="text-base font-semibold text-apple-text">
+          Drop photos here, or <span class="text-apple-blue font-medium hover:underline">browse</span>
+        </p>
+        <p class="text-xs text-apple-secondary">
+          Supports iPhone <span class="font-medium text-apple-text">.HEIC</span>, <span class="font-medium text-apple-text">.JPEG</span>, <span class="font-medium text-apple-text">.PNG</span>, and <span class="font-medium text-apple-text">.WEBP</span>
+        </p>
       </div>
-      <input type="file" id="fileInput" multiple accept="image/*,.heic,.heif" class="hidden">
+
+      <input type="file" id="filePicker" multiple accept="image/*,.heic,.heif" class="hidden">
     </div>
 
-    <!-- Stats Bar & Global Actions -->
-    <div id="actionToolbar" class="hidden bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-4 text-xs font-mono">
-        <div>Total: <span id="totalCount" class="font-bold text-white">0</span> files</div>
-        <div>Before: <span id="totalOriginalSize" class="text-slate-400">0 MB</span></div>
-        <div>After: <span id="totalNewSize" class="text-emerald-400 font-bold">0 MB</span></div>
-        <div>Saved: <span id="totalSavings" class="text-indigo-400 font-bold">0%</span></div>
+    <!-- Converted List Container -->
+    <div id="resultsWrapper" class="hidden space-y-4">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-sm font-semibold text-apple-text flex items-center gap-2">
+          <span>Processed Images</span>
+          <span id="processedBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-apple-surfaceMuted text-apple-secondary font-medium">0</span>
+        </h2>
+        <button id="clearAllBtn" class="text-xs text-apple-secondary hover:text-apple-text transition font-medium">Clear All</button>
       </div>
-      <div class="flex items-center gap-2">
-        <button id="clearBtn" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition">Clear All</button>
-        <button id="downloadAllBtn" class="px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg shadow-lg shadow-indigo-500/25 transition flex items-center gap-1.5">
-          <span>📦</span> Download All (ZIP)
-        </button>
+
+      <div id="resultsList" class="space-y-2.5">
+        <!-- Dynamically populated rows -->
       </div>
     </div>
-
-    <!-- Results List -->
-    <div id="resultsList" class="space-y-2"></div>
 
   </main>
 
-  <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-600">
-    Ultra AVIF Squeezer • Powered by HTML5 Canvas & WebAssembly • Hosted Free on Vercel
+  <!-- Sticky Floating Apple-Style Dynamic Island Action Bar -->
+  <div id="floatingBar" class="fixed bottom-6 inset-x-0 mx-auto max-w-xl px-4 z-40 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none">
+    <div class="glass-panel bg-white/90 rounded-2xl p-3.5 shadow-apple-float border border-black/[0.08] flex items-center justify-between gap-4">
+      
+      <!-- Stats summary -->
+      <div class="flex items-center gap-3 pl-2 text-xs">
+        <div class="w-2 h-2 rounded-full bg-apple-green animate-pulse"></div>
+        <div class="font-mono">
+          <span id="statBefore" class="text-apple-secondary">0 MB</span>
+          <span class="text-apple-tertiary mx-1">→</span>
+          <span id="statAfter" class="font-semibold text-apple-text">0 MB</span>
+          <span id="statSaved" class="ml-1.5 text-apple-blue font-bold px-1.5 py-0.5 rounded bg-apple-blueLight border border-apple-blueBorder">0%</span>
+        </div>
+      </div>
+
+      <!-- Download Button -->
+      <button id="downloadZipBtn" class="apple-btn px-5 py-2.5 bg-apple-blue hover:bg-apple-blueHover active:scale-95 text-white font-medium text-xs rounded-xl shadow-apple-button flex items-center gap-2 transition shrink-0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Download All (.zip)</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="py-8 text-center text-xs text-apple-tertiary border-t border-black/[0.05] mt-12">
+    Designed with Apple Fluid Design principles • 100% Client-Side Processing • Free & Open
   </footer>
 
   <script src="app.js"></script>
 </body>
 </html>
-
