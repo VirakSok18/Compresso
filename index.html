@@ -3,161 +3,659 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compresso — Ultra-Clean Image Squeezer</title>
-  
-  <!-- Apple System Font & Modern CDN Assets -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Compresso — Pure Image Compression</title>
+
+  <!-- External libraries for ZIP and HEIC decoding -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            apple: {
-              bg: '#FBFBFD',
-              surface: '#FFFFFF',
-              surfaceMuted: '#F5F5F7',
-              border: 'rgba(0, 0, 0, 0.08)',
-              borderFocus: 'rgba(0, 113, 227, 0.35)',
-              text: '#1D1D1F',
-              secondary: '#6E6E73',
-              tertiary: '#86868B',
-              blue: '#0071E3',
-              blueHover: '#0077ED',
-              blueLight: '#F0F6FF',
-              blueBorder: '#CCE1FF',
-              green: '#34C759',
-              greenLight: '#E8F8ED',
-            }
-          },
-          fontFamily: {
-            sans: [
-              '-apple-system',
-              'BlinkMacSystemFont',
-              '"SF Pro Display"',
-              '"SF Pro Text"',
-              '"SF Pro"',
-              'system-ui',
-              '-apple-system-subheading',
-              'sans-serif'
-            ]
-          },
-          boxShadow: {
-            'apple-sm': '0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02)',
-            'apple-card': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.04)',
-            'apple-float': '0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05)',
-            'apple-button': '0 1px 2px rgba(0, 113, 227, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
-          }
-        }
-      }
-    }
-  </script>
-
+  <!-- 100% Self-Contained Apple Design System (Zero CDN CSS dependency) -->
   <style>
-    /* Apple Typography - Optical Tracking & Sizing */
+    :root {
+      --bg: #FBFBFD;
+      --surface: #FFFFFF;
+      --surface-muted: #F5F5F7;
+      --surface-hover: #EBEBED;
+      --border: rgba(0, 0, 0, 0.08);
+      --border-subtle: rgba(0, 0, 0, 0.04);
+      --text: #1D1D1F;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #86868B;
+      --blue: #0071E3;
+      --blue-hover: #0077ED;
+      --blue-light: #F0F6FF;
+      --blue-border: #CCE1FF;
+      --green: #34C759;
+      --green-light: #E8F8ED;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+      --shadow-card: 0 2px 12px -2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+      --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background-color: #FBFBFD;
-      color: #1D1D1F;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
     }
 
-    h1 {
+    /* Header Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(251, 251, 253, 0.82);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0, 113, 227, 0.3);
+    }
+
+    .brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--blue-light);
+      color: var(--blue);
+      border: 1px solid var(--blue-border);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 820px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
       letter-spacing: -0.035em;
+      line-height: 1.1;
+      color: var(--text);
     }
 
-    .tracking-tight-apple {
-      letter-spacing: -0.015em;
+    .hero h1 span {
+      color: var(--blue);
     }
 
-    /* Apple-style spring tactile buttons */
-    .apple-btn {
-      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), 
-                  background-color 0.15s ease, 
-                  box-shadow 0.15s ease, 
-                  opacity 0.15s ease;
-    }
-    .apple-btn:active {
-      transform: scale(0.97);
+    .hero p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 480px;
+      font-weight: 400;
     }
 
-    /* iOS-style custom slider track */
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+    }
+
+    /* Controls Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 640px) {
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero h1 {
+        font-size: 32px;
+      }
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* Segmented Control */
+    .segmented-control {
+      background: var(--surface-muted);
+      border-radius: 12px;
+      padding: 4px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .segment-btn {
+      border: none;
+      background: transparent;
+      padding: 7px 0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+    }
+
+    .segment-btn.active {
+      background: #FFFFFF;
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Slider */
+    .quality-badge {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--blue-light);
+      color: var(--blue);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--blue-border);
+    }
+
     input[type=range] {
       -webkit-appearance: none;
-      background: transparent;
-    }
-    input[type=range]::-webkit-slider-runnable-track {
       width: 100%;
       height: 6px;
-      cursor: pointer;
       background: #E5E5EA;
       border-radius: 999px;
-      transition: background 0.2s ease;
+      outline: none;
+      cursor: pointer;
+      margin: 10px 0;
     }
+
     input[type=range]::-webkit-slider-thumb {
-      height: 20px;
+      -webkit-appearance: none;
       width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: #FFFFFF;
       box-shadow: 0 1px 4px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.06);
       cursor: pointer;
-      -webkit-appearance: none;
-      margin-top: -7px;
-      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+      transition: transform 0.1s ease;
     }
-    input[type=range]::-webkit-slider-thumb:hover {
-      transform: scale(1.08);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(0,0,0,0.08);
-    }
+
     input[type=range]::-webkit-slider-thumb:active {
       transform: scale(1.15);
-      background: #FAFAFA;
     }
 
-    /* Translucent Frosted Glass Chrome */
-    .glass-nav {
-      background: rgba(251, 251, 253, 0.82);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    .slider-hint {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-tertiary);
     }
 
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.9);
+    .card-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 20px 0;
+    }
+
+    /* Switch Row */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .switch-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .switch-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+    }
+
+    .switch-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .switch-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* iOS Toggle Switch */
+    .ios-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 26px;
+    }
+
+    .ios-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-round {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #E5E5EA;
+      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 34px;
+    }
+
+    .slider-round:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .slider-round {
+      background-color: var(--blue);
+    }
+
+    input:checked + .slider-round:before {
+      transform: translateX(18px);
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      background: var(--surface);
+      border: 1.5px dashed rgba(0, 0, 0, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .drop-zone:hover {
+      border-color: var(--blue);
+      background: var(--blue-light);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .drop-icon-wrapper {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: var(--blue-light);
+      border: 1px solid var(--blue-border);
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+
+    .drop-zone:hover .drop-icon-wrapper {
+      transform: scale(1.06);
+    }
+
+    .drop-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .drop-title span {
+      color: var(--blue);
+      text-decoration: underline;
+    }
+
+    .drop-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Results List */
+    .results-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .results-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .count-badge {
+      font-size: 11px;
+      background: var(--surface-muted);
+      color: var(--text-secondary);
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-family: monospace;
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .clear-btn:hover {
+      color: var(--text);
+    }
+
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .result-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .thumb-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .thumb-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .result-meta {
+      min-width: 0;
+    }
+
+    .result-filename {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+
+    .result-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .saved-pill {
+      background: var(--blue-light);
+      color: var(--blue);
+      border: 1px solid var(--blue-border);
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .save-button {
+      background: var(--surface-muted);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .save-button:hover {
+      background: var(--blue);
+      color: #FFFFFF;
+      border-color: var(--blue);
+    }
+
+    .save-button:active {
+      transform: scale(0.96);
+    }
+
+    /* Floating Dynamic Bottom Bar */
+    .floating-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translate(-50%, 100px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 40;
+      width: calc(100% - 48px);
+      max-width: 580px;
+    }
+
+    .floating-bar.visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .floating-bar-inner {
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(25px) saturate(190%);
       -webkit-backdrop-filter: blur(25px) saturate(190%);
-      border: 1px solid rgba(0, 0, 0, 0.07);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 18px;
+      padding: 12px 18px;
+      box-shadow: var(--shadow-float);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
 
-    /* Segmented pill control */
-    .segment-btn {
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .segment-btn.active {
-      background: #FFFFFF;
-      color: #1D1D1F;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    .floating-stats {
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    /* Reduced Motion */
-    @media (prefers-reduced-motion: reduce) {
-      .apple-btn, input[type=range]::-webkit-slider-thumb, .segment-btn {
-        transition: none !important;
-        transform: none !important;
-      }
+    .floating-stats strong {
+      color: var(--text);
+    }
+
+    .zip-btn {
+      background: var(--blue);
+      color: #FFFFFF;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(0, 113, 227, 0.3);
+      transition: all 0.15s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .zip-btn:hover {
+      background: var(--blue-hover);
+    }
+
+    .zip-btn:active {
+      transform: scale(0.96);
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      border-top: 1px solid var(--border-subtle);
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans selection:bg-apple-blueLight selection:text-apple-blue">
+<body>
 
-  <!-- Apple Navigation Bar -->
-  <header class="glass-nav sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <div class="w-7 h-7 rounded-lg bg-apple-blue flex items-center justify-center text-white font-bold text-xs shadow-sm">
+  <!-- Header -->
+  <header>
+    <div class="nav-inner">
+      <a href="#" class="brand">
+        <div class="brand-icon">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="4 14 10 14 10 20"></polyline>
             <polyline points="20 10 14 10 14 4"></polyline>
@@ -165,64 +663,51 @@
             <line x1="3" y1="21" x2="10" y2="14"></line>
           </svg>
         </div>
-        <span class="font-semibold text-[15px] tracking-tight-apple text-apple-text">Compresso</span>
-        <span class="text-[11px] text-apple-tertiary px-2 py-0.5 rounded-full bg-apple-surfaceMuted font-medium">AVIF</span>
-      </div>
+        <span class="brand-name">Compresso</span>
+      </a>
 
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-apple-blueLight border border-apple-blueBorder text-apple-blue text-[11px] font-medium">
-          <span class="w-1.5 h-1.5 rounded-full bg-apple-blue animate-pulse"></span>
-          100% In-Browser & Private
-        </div>
+      <div class="badge-pill">
+        <span class="badge-dot"></span>
+        100% In-Browser & Private
       </div>
     </div>
   </header>
 
-  <!-- Content Container -->
-  <main class="max-w-4xl mx-auto px-6 py-10 flex-1 w-full space-y-8">
+  <!-- Main Content -->
+  <main>
 
-    <!-- Hero Title -->
-    <div class="text-center space-y-3 pt-2 pb-1">
-      <h1 class="text-4xl md:text-5xl font-semibold tracking-tight text-apple-text">
-        Pure compression. <span class="text-apple-blue">Zero compromise.</span>
-      </h1>
-      <p class="text-apple-secondary text-base md:text-lg max-w-lg mx-auto font-normal leading-relaxed">
-        Squeeze iPhone HEIC, JPEG, PNG, and WebP by up to 95%. Everything happens directly in your browser.
-      </p>
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Pure compression. <span>Zero compromise.</span></h1>
+      <p>Squeeze iPhone HEIC, JPEG, PNG, and WebP by up to 95%. Everything runs privately inside your browser.</p>
     </div>
 
-    <!-- Apple-Style Settings Card -->
-    <div class="glass-panel rounded-2xl p-6 shadow-apple-card space-y-6">
-      
-      <!-- Top Row: Segmented Resolution & Quality Slider -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+    <!-- Apple Controls Card -->
+    <div class="card">
+      <div class="controls-grid">
         
-        <!-- Resolution Segmented Control -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between text-xs font-medium text-apple-secondary">
+        <!-- Segmented Resolution Control -->
+        <div>
+          <div class="control-label-row">
             <span>Target Resolution</span>
-            <span class="text-[11px] text-apple-tertiary">Smart Downscale</span>
+            <span style="color: var(--text-tertiary); font-weight: 400;">Smart Downscale</span>
           </div>
-          <div class="grid grid-cols-4 bg-apple-surfaceMuted p-1 rounded-xl text-xs font-medium text-apple-secondary">
-            <button type="button" data-res="2560" class="segment-btn active py-1.5 rounded-lg text-center font-semibold">2K (2560)</button>
-            <button type="button" data-res="1920" class="segment-btn py-1.5 rounded-lg text-center">1080p</button>
-            <button type="button" data-res="3840" class="segment-btn py-1.5 rounded-lg text-center">4K</button>
-            <button type="button" data-res="original" class="segment-btn py-1.5 rounded-lg text-center">Original</button>
+          <div class="segmented-control">
+            <button type="button" data-res="2560" class="segment-btn active">2K (2560)</button>
+            <button type="button" data-res="1920" class="segment-btn">1080p</button>
+            <button type="button" data-res="3840" class="segment-btn">4K</button>
+            <button type="button" data-res="original" class="segment-btn">Original</button>
           </div>
         </div>
 
-        <!-- Tactile Quality Slider -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between text-xs font-medium text-apple-secondary">
+        <!-- Quality Slider -->
+        <div>
+          <div class="control-label-row">
             <span>Image Quality</span>
-            <span id="qualityLabel" class="font-mono text-apple-blue font-semibold text-xs bg-apple-blueLight px-2 py-0.5 rounded-md border border-apple-blueBorder">
-              50% (Recommended)
-            </span>
+            <span id="qualityLabel" class="quality-badge">50% (Recommended)</span>
           </div>
-          <div class="pt-1">
-            <input type="range" id="qualitySlider" min="20" max="85" value="50" class="w-full">
-          </div>
-          <div class="flex justify-between text-[11px] text-apple-tertiary">
+          <input type="range" id="qualitySlider" min="20" max="85" value="50">
+          <div class="slider-hint">
             <span>Smaller File</span>
             <span>Perfection</span>
           </div>
@@ -230,90 +715,72 @@
 
       </div>
 
-      <!-- Divider -->
-      <div class="h-px bg-black/[0.05]"></div>
+      <div class="card-divider"></div>
 
-      <!-- Bottom Row: EXIF Strip Toggle & Status -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-apple-surfaceMuted flex items-center justify-center text-apple-secondary text-sm">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- EXIF Toggle -->
+      <div class="switch-row">
+        <div class="switch-info">
+          <div class="switch-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
           </div>
           <div>
-            <p class="text-xs font-medium text-apple-text">Remove Camera & GPS Metadata</p>
-            <p class="text-[11px] text-apple-secondary">Strips location tags, camera serials, and unneeded color profiles</p>
+            <div class="switch-title">Remove Camera & GPS Metadata</div>
+            <div class="switch-desc">Strips location tags, camera serials, and unneeded profiles to save ~100KB per image</div>
           </div>
         </div>
 
-        <!-- iOS Switch -->
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="stripExif" checked class="sr-only peer">
-          <div class="w-11 h-6 bg-apple-surfaceMuted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm peer-checked:bg-apple-blue"></div>
+        <label class="ios-switch">
+          <input type="checkbox" id="stripExif" checked>
+          <span class="slider-round"></span>
         </label>
       </div>
 
     </div>
 
-    <!-- Apple-Style Drag & Drop Zone -->
-    <div id="dropZone" class="group relative bg-apple-surface border border-dashed border-black/[0.12] hover:border-apple-blue/70 rounded-3xl p-12 text-center transition-all duration-300 cursor-pointer shadow-apple-sm hover:shadow-apple-card flex flex-col items-center justify-center gap-4">
-      
-      <!-- Icon with soft Apple Blue circle -->
-      <div class="w-16 h-16 rounded-2xl bg-apple-blueLight border border-apple-blueBorder text-apple-blue flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-105">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Drop Zone -->
+    <div id="dropZone" class="drop-zone">
+      <div class="drop-icon-wrapper">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
+          <line x1="12" y1="15" x2="12" y2="15"></line>
         </svg>
       </div>
-
-      <div class="space-y-1">
-        <p class="text-base font-semibold text-apple-text">
-          Drop photos here, or <span class="text-apple-blue font-medium hover:underline">browse</span>
-        </p>
-        <p class="text-xs text-apple-secondary">
-          Supports iPhone <span class="font-medium text-apple-text">.HEIC</span>, <span class="font-medium text-apple-text">.JPEG</span>, <span class="font-medium text-apple-text">.PNG</span>, and <span class="font-medium text-apple-text">.WEBP</span>
-        </p>
+      <div>
+        <div class="drop-title">Drop photos here, or <span>browse files</span></div>
+        <div class="drop-subtitle">Supports iPhone .HEIC, .JPEG, .PNG, and .WEBP</div>
       </div>
-
-      <input type="file" id="filePicker" multiple accept="image/*,.heic,.heif" class="hidden">
+      <input type="file" id="filePicker" multiple accept="image/*,.heic,.heif" style="display: none;">
     </div>
 
-    <!-- Converted List Container -->
-    <div id="resultsWrapper" class="hidden space-y-4">
-      <div class="flex items-center justify-between px-1">
-        <h2 class="text-sm font-semibold text-apple-text flex items-center gap-2">
+    <!-- Results Section -->
+    <div id="resultsWrapper" class="results-wrapper" style="display: none;">
+      <div class="results-header">
+        <div class="results-title">
           <span>Processed Images</span>
-          <span id="processedBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-apple-surfaceMuted text-apple-secondary font-medium">0</span>
-        </h2>
-        <button id="clearAllBtn" class="text-xs text-apple-secondary hover:text-apple-text transition font-medium">Clear All</button>
+          <span id="processedBadge" class="count-badge">0</span>
+        </div>
+        <button id="clearAllBtn" class="clear-btn">Clear All</button>
       </div>
 
-      <div id="resultsList" class="space-y-2.5">
-        <!-- Dynamically populated rows -->
-      </div>
+      <div id="resultsList" class="results-list"></div>
     </div>
 
   </main>
 
-  <!-- Sticky Floating Apple-Style Dynamic Island Action Bar -->
-  <div id="floatingBar" class="fixed bottom-6 inset-x-0 mx-auto max-w-xl px-4 z-40 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none">
-    <div class="glass-panel bg-white/90 rounded-2xl p-3.5 shadow-apple-float border border-black/[0.08] flex items-center justify-between gap-4">
-      
-      <!-- Stats summary -->
-      <div class="flex items-center gap-3 pl-2 text-xs">
-        <div class="w-2 h-2 rounded-full bg-apple-green animate-pulse"></div>
-        <div class="font-mono">
-          <span id="statBefore" class="text-apple-secondary">0 MB</span>
-          <span class="text-apple-tertiary mx-1">→</span>
-          <span id="statAfter" class="font-semibold text-apple-text">0 MB</span>
-          <span id="statSaved" class="ml-1.5 text-apple-blue font-bold px-1.5 py-0.5 rounded bg-apple-blueLight border border-apple-blueBorder">0%</span>
-        </div>
+  <!-- Floating Dynamic Island Action Bar -->
+  <div id="floatingBar" class="floating-bar">
+    <div class="floating-bar-inner">
+      <div class="floating-stats">
+        <span id="statBefore">0 MB</span>
+        <span>→</span>
+        <strong id="statAfter">0 MB</strong>
+        <span id="statSaved" class="saved-pill">0%</span>
       </div>
 
-      <!-- Download Button -->
-      <button id="downloadZipBtn" class="apple-btn px-5 py-2.5 bg-apple-blue hover:bg-apple-blueHover active:scale-95 text-white font-medium text-xs rounded-xl shadow-apple-button flex items-center gap-2 transition shrink-0">
+      <button id="downloadZipBtn" class="zip-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -321,12 +788,11 @@
         </svg>
         <span>Download All (.zip)</span>
       </button>
-
     </div>
   </div>
 
   <!-- Footer -->
-  <footer class="py-8 text-center text-xs text-apple-tertiary border-t border-black/[0.05] mt-12">
+  <footer>
     Designed with Apple Fluid Design principles • 100% Client-Side Processing • Free & Open
   </footer>
 

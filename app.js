@@ -1,5 +1,5 @@
 // Compresso — Apple-Inspired Client-Side AVIF Converter
-// Adheres to Apple Human Interface Guidelines and Emil Kowalski's Fluid Interface design principles
+// 100% Client-side, Zero Server Uploads, Privacy First
 
 const dropZone = document.getElementById('dropZone');
 const filePicker = document.getElementById('filePicker');
@@ -22,11 +22,11 @@ let processedFiles = [];
 let totalInputBytes = 0;
 let totalOutputBytes = 0;
 
-// 1. Resolution Segmented Control (Apple Pill Slider)
+// 1. Resolution Segmented Control
 segmentBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    segmentBtns.forEach(b => b.classList.remove('active', 'font-semibold'));
-    btn.classList.add('active', 'font-semibold');
+    segmentBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
     activeResolution = btn.dataset.res;
   });
 });
@@ -44,20 +44,24 @@ qualitySlider.addEventListener('input', (e) => {
   qualityLabel.textContent = `${val}% (${descriptor})`;
 });
 
-// 3. Fluid Drag & Drop Handling (Direct Manipulation)
+// 3. Drag & Drop Direct Manipulation
 dropZone.addEventListener('click', () => filePicker.click());
 
 ['dragenter', 'dragover'].forEach(eventName => {
   dropZone.addEventListener(eventName, (e) => {
     e.preventDefault();
-    dropZone.classList.add('border-apple-blue', 'bg-apple-blueLight/30', 'scale-[0.995]');
+    dropZone.style.borderColor = 'var(--blue)';
+    dropZone.style.backgroundColor = 'var(--blue-light)';
+    dropZone.style.transform = 'scale(0.99)';
   });
 });
 
 ['dragleave', 'drop'].forEach(eventName => {
   dropZone.addEventListener(eventName, (e) => {
     e.preventDefault();
-    dropZone.classList.remove('border-apple-blue', 'bg-apple-blueLight/30', 'scale-[0.995]');
+    dropZone.style.borderColor = '';
+    dropZone.style.backgroundColor = '';
+    dropZone.style.transform = '';
   });
 });
 
@@ -81,7 +85,7 @@ function formatBytes(bytes) {
 
 // 4. Batch Pipeline
 async function handleBatchUpload(files) {
-  resultsWrapper.classList.remove('hidden');
+  resultsWrapper.style.display = 'flex';
 
   for (const file of files) {
     await processSingleImage(file);
@@ -94,25 +98,25 @@ async function processSingleImage(file) {
   const rowId = 'row-' + Math.random().toString(36).substring(2, 9);
   const ext = file.name.split('.').pop().toLowerCase();
 
-  // Create Apple-Style Card Placeholder
+  // Create Card Placeholder
   const row = document.createElement('div');
   row.id = rowId;
-  row.className = 'glass-panel bg-white p-3.5 rounded-2xl shadow-apple-card flex items-center justify-between gap-4 transition-all duration-300';
+  row.className = 'result-row';
   row.innerHTML = `
-    <div class="flex items-center gap-3.5 min-w-0">
-      <div class="w-12 h-12 rounded-xl bg-apple-surfaceMuted flex items-center justify-center text-apple-tertiary text-xs shrink-0 font-medium">
-        <svg class="animate-spin text-apple-blue w-5 h-5" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+    <div class="result-left">
+      <div class="thumb-box">
+        <svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" style="animation: spin 1s linear infinite; color: var(--blue);">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" style="opacity: 0.25;"></circle>
+          <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" style="opacity: 0.75;"></path>
         </svg>
       </div>
-      <div class="min-w-0">
-        <p class="font-medium text-xs text-apple-text truncate max-w-xs md:max-w-md">${file.name}</p>
-        <p class="text-[11px] text-apple-secondary font-mono mt-0.5">${formatBytes(file.size)} • Processing</p>
+      <div class="result-meta">
+        <div class="result-filename">${file.name}</div>
+        <div class="result-stats">${formatBytes(file.size)} • Processing...</div>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <span class="text-[11px] text-apple-blue font-medium animate-pulse">Compressing</span>
+    <div>
+      <span style="font-size: 11px; color: var(--blue); font-weight: 500;">Compressing</span>
     </div>
   `;
   resultsList.prepend(row);
@@ -163,7 +167,7 @@ async function processSingleImage(file) {
 
     URL.revokeObjectURL(imgUrl);
 
-    // Convert to AVIF (or graceful WebP fallback if browser lacks native AVIF encode)
+    // Convert to AVIF (or graceful WebP fallback if browser lacks native AVIF canvas encode)
     let outputFormat = 'image/avif';
     let outputExt = '.avif';
 
@@ -202,22 +206,22 @@ async function processSingleImage(file) {
 
     // Update with Apple Card styling
     row.innerHTML = `
-      <div class="flex items-center gap-3.5 min-w-0">
-        <div class="w-12 h-12 rounded-xl bg-apple-surfaceMuted overflow-hidden border border-black/[0.06] shrink-0 relative">
-          <img src="${thumbUrl}" alt="Preview" class="w-full h-full object-cover">
+      <div class="result-left">
+        <div class="thumb-box">
+          <img src="${thumbUrl}" alt="Preview">
         </div>
-        <div class="min-w-0">
-          <p class="font-medium text-xs text-apple-text truncate max-w-xs md:max-w-md">${finalFileName}</p>
-          <div class="flex items-center gap-2 text-[11px] text-apple-secondary font-mono mt-0.5">
+        <div class="result-meta">
+          <div class="result-filename">${finalFileName}</div>
+          <div class="result-stats">
             <span>${formatBytes(originalSize)}</span>
-            <span class="text-apple-tertiary">→</span>
-            <span class="font-semibold text-apple-text">${formatBytes(newSize)}</span>
-            <span class="text-apple-blue font-semibold bg-apple-blueLight px-1.5 py-0.2 rounded border border-apple-blueBorder">-${savedPercent}%</span>
+            <span>→</span>
+            <strong style="color: var(--text);">${formatBytes(newSize)}</strong>
+            <span class="saved-pill">-${savedPercent}%</span>
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <a href="${downloadUrl}" download="${finalFileName}" class="apple-btn px-3 py-1.5 rounded-lg bg-apple-surfaceMuted hover:bg-apple-blue hover:text-white text-apple-text text-xs font-medium flex items-center gap-1.5 transition">
+      <div>
+        <a href="${downloadUrl}" download="${finalFileName}" class="save-button">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -230,15 +234,15 @@ async function processSingleImage(file) {
 
   } catch (err) {
     row.innerHTML = `
-      <div class="flex items-center gap-3 text-red-500 text-xs">
+      <div style="color: #FF3B30; font-size: 12px; display: flex; align-items: center; gap: 8px;">
         <span>⚠</span>
-        <span class="truncate">${file.name}: ${err.message || 'Compression error'}</span>
+        <span>${file.name}: ${err.message || 'Compression error'}</span>
       </div>
     `;
   }
 }
 
-// 6. Global Stats & Dynamic Island Bottom Bar
+// 6. Global Stats & Floating Bar
 function updateGlobalStats() {
   processedBadge.textContent = processedFiles.length;
   statBefore.textContent = formatBytes(totalInputBytes);
@@ -251,8 +255,7 @@ function updateGlobalStats() {
 
   // Materialize floating bottom bar
   if (processedFiles.length > 0) {
-    floatingBar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-    floatingBar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+    floatingBar.classList.add('visible');
   }
 }
 
@@ -262,25 +265,17 @@ clearAllBtn.addEventListener('click', () => {
   totalInputBytes = 0;
   totalOutputBytes = 0;
   resultsList.innerHTML = '';
-  resultsWrapper.classList.add('hidden');
+  resultsWrapper.style.display = 'none';
   filePicker.value = '';
-
-  floatingBar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-  floatingBar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+  floatingBar.classList.remove('visible');
 });
 
-// 8. Download All as ZIP (Bundled seamlessly)
+// 8. Download All as ZIP
 downloadZipBtn.addEventListener('click', async () => {
   if (processedFiles.length === 0) return;
 
   downloadZipBtn.disabled = true;
-  downloadZipBtn.innerHTML = `
-    <svg class="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-    </svg>
-    <span>Creating Archive...</span>
-  `;
+  downloadZipBtn.innerHTML = `<span>⏳ Zipping...</span>`;
 
   try {
     const zip = new JSZip();
@@ -309,3 +304,8 @@ downloadZipBtn.addEventListener('click', async () => {
     `;
   }
 });
+
+// Keyframe for spinner
+const style = document.createElement('style');
+style.textContent = `@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
+document.head.appendChild(style);
