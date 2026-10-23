@@ -1,0 +1,11 @@
+{
+  "name": "ultra-avif-squeezer",
+  "version": "1.0.0",
+  "description": "100% Free client-side AVIF image compressor hosted on Vercel",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["avif", "image-compression", "heic", "client-side", "vercel"],
+  "license": "MIT"
+}
+
