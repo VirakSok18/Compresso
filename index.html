@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compresso</title>
+  <title>Compresso — Pure Image Compression</title>
 
   <!-- External libraries for ZIP and HEIC decoding with auto-fallback -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -60,7 +60,7 @@
       padding: 32px 24px 20px;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: space-between;
     }
 
     .brand {
@@ -86,6 +86,21 @@
       font-size: 17px;
       font-weight: 600;
       letter-spacing: -0.025em;
+    }
+
+    .clear-history-btn {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: none;
+      transition: color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .clear-history-btn:hover {
+      color: #FF3B30;
     }
 
     /* Main Container */
@@ -196,6 +211,7 @@
       flex-direction: column;
       gap: 16px;
       animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
     }
 
     @keyframes slideIn {
@@ -263,6 +279,32 @@
       background: var(--green-light);
       color: var(--green);
       border-color: rgba(52, 199, 89, 0.2);
+    }
+
+    .batch-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .delete-batch-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .delete-batch-btn:hover {
+      color: #FF3B30;
+      background: rgba(255, 59, 48, 0.08);
+      border-color: rgba(255, 59, 48, 0.15);
     }
 
     /* Smooth Progress Bar */
@@ -383,6 +425,8 @@
       </div>
       <span class="brand-name">Compresso</span>
     </a>
+
+    <button id="clearHistoryBtn" class="clear-history-btn">Clear History</button>
   </header>
 
   <!-- Main Content -->
@@ -391,7 +435,7 @@
     <!-- Clean Headline -->
     <div class="hero">
       <h1>Compress images.</h1>
-      <p>Drop folders or batches to compress. Clean sections, live progress, and instant ZIP download.</p>
+      <p>Drop folders or batches to shrink up to 85%. Clean sections, live progress, and instant download.</p>
     </div>
 
     <!-- Drop Zone -->
@@ -410,7 +454,7 @@
       <input type="file" id="filePicker" multiple accept="image/*,.heic,.heif" style="display: none;">
     </div>
 
-    <!-- Batches Feed (Each drop gets its own dedicated card with date) -->
+    <!-- Batches Feed (Persisted in IndexedDB across reloads) -->
     <div id="batchesContainer" class="batches-container"></div>
 
   </main>
