@@ -3,36 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compresso — Pure Image Compression</title>
+  <title>Compresso</title>
 
   <!-- External libraries for ZIP and HEIC decoding -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
-  <!-- 100% Self-Contained Apple Design System (Zero CDN CSS dependency) -->
+  <!-- Ultra-Clean Minimal Apple Design -->
   <style>
     :root {
       --bg: #FBFBFD;
       --surface: #FFFFFF;
       --surface-muted: #F5F5F7;
-      --surface-hover: #EBEBED;
       --border: rgba(0, 0, 0, 0.08);
       --border-subtle: rgba(0, 0, 0, 0.04);
       --text: #1D1D1F;
-      --text-secondary: #6E6E73;
-      --text-tertiary: #86868B;
+      --text-secondary: #86868B;
       --blue: #0071E3;
       --blue-hover: #0077ED;
       --blue-light: #F0F6FF;
       --blue-border: #CCE1FF;
-      --green: #34C759;
-      --green-light: #E8F8ED;
       --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
-      --shadow-card: 0 2px 12px -2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
       --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
-      --radius-lg: 20px;
+      --radius-lg: 24px;
       --radius-md: 14px;
-      --radius-sm: 10px;
     }
 
     * {
@@ -50,28 +45,18 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      align-items: center;
       line-height: 1.5;
     }
 
-    /* Header Nav */
+    /* Minimal Header */
     header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(251, 251, 253, 0.82);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .nav-inner {
-      max-width: 820px;
-      margin: 0 auto;
-      padding: 0 24px;
-      height: 56px;
+      width: 100%;
+      max-width: 680px;
+      padding: 32px 24px 20px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
     }
 
     .brand {
@@ -91,297 +76,73 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 1px 3px rgba(0, 113, 227, 0.3);
     }
 
     .brand-name {
-      font-size: 15px;
+      font-size: 17px;
       font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .badge-pill {
-      font-size: 11px;
-      font-weight: 500;
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: var(--blue-light);
-      color: var(--blue);
-      border: 1px solid var(--blue-border);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--blue);
+      letter-spacing: -0.025em;
     }
 
     /* Main Container */
     main {
-      max-width: 820px;
       width: 100%;
-      margin: 0 auto;
-      padding: 40px 24px 100px;
-      flex: 1;
+      max-width: 680px;
+      padding: 20px 24px 100px;
       display: flex;
       flex-direction: column;
-      gap: 32px;
+      gap: 28px;
     }
 
-    /* Hero Section */
+    /* Hero Text */
     .hero {
-      text-align: center;
+      text-align: left;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 10px;
+      gap: 6px;
     }
 
     .hero h1 {
-      font-size: 42px;
+      font-size: 36px;
       font-weight: 700;
       letter-spacing: -0.035em;
-      line-height: 1.1;
+      line-height: 1.15;
       color: var(--text);
-    }
-
-    .hero h1 span {
-      color: var(--blue);
     }
 
     .hero p {
-      font-size: 16px;
+      font-size: 15px;
       color: var(--text-secondary);
-      max-width: 480px;
       font-weight: 400;
     }
 
-    /* Cards */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      box-shadow: var(--shadow-card);
-    }
-
-    /* Controls Grid */
-    .controls-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-
-    @media (max-width: 640px) {
-      .controls-grid {
-        grid-template-columns: 1fr;
-      }
-      .hero h1 {
-        font-size: 32px;
-      }
-    }
-
-    .control-label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    /* Segmented Control */
-    .segmented-control {
-      background: var(--surface-muted);
-      border-radius: 12px;
-      padding: 4px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-    }
-
-    .segment-btn {
-      border: none;
-      background: transparent;
-      padding: 7px 0;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-      font-family: inherit;
-    }
-
-    .segment-btn.active {
-      background: #FFFFFF;
-      color: var(--text);
-      font-weight: 600;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
-    }
-
-    /* Slider */
-    .quality-badge {
-      font-family: monospace;
-      font-size: 11px;
-      font-weight: 600;
-      background: var(--blue-light);
-      color: var(--blue);
-      padding: 2px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--blue-border);
-    }
-
-    input[type=range] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      background: #E5E5EA;
-      border-radius: 999px;
-      outline: none;
-      cursor: pointer;
-      margin: 10px 0;
-    }
-
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #FFFFFF;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.06);
-      cursor: pointer;
-      transition: transform 0.1s ease;
-    }
-
-    input[type=range]::-webkit-slider-thumb:active {
-      transform: scale(1.15);
-    }
-
-    .slider-hint {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-tertiary);
-    }
-
-    .card-divider {
-      height: 1px;
-      background: var(--border-subtle);
-      margin: 20px 0;
-    }
-
-    /* Switch Row */
-    .switch-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .switch-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .switch-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--surface-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-secondary);
-    }
-
-    .switch-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .switch-desc {
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    /* iOS Toggle Switch */
-    .ios-switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 26px;
-    }
-
-    .ios-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider-round {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #E5E5EA;
-      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      border-radius: 34px;
-    }
-
-    .slider-round:before {
-      position: absolute;
-      content: "";
-      height: 22px;
-      width: 22px;
-      left: 2px;
-      bottom: 2px;
-      background-color: white;
-      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    input:checked + .slider-round {
-      background-color: var(--blue);
-    }
-
-    input:checked + .slider-round:before {
-      transform: translateX(18px);
-    }
-
-    /* Drop Zone */
+    /* Minimalist Drop Zone */
     .drop-zone {
       background: var(--surface);
       border: 1.5px dashed rgba(0, 0, 0, 0.12);
       border-radius: var(--radius-lg);
-      padding: 48px 24px;
+      padding: 56px 24px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
       box-shadow: var(--shadow-sm);
     }
 
     .drop-zone:hover {
       border-color: var(--blue);
       background: var(--blue-light);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
       box-shadow: var(--shadow-card);
     }
 
     .drop-icon-wrapper {
-      width: 60px;
-      height: 60px;
-      border-radius: 18px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
       background: var(--blue-light);
       border: 1px solid var(--blue-border);
       color: var(--blue);
@@ -392,30 +153,32 @@
     }
 
     .drop-zone:hover .drop-icon-wrapper {
-      transform: scale(1.06);
+      transform: scale(1.08);
     }
 
     .drop-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--text);
+      letter-spacing: -0.015em;
     }
 
     .drop-title span {
       color: var(--blue);
-      text-decoration: underline;
     }
 
     .drop-subtitle {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-secondary);
+      margin-top: 2px;
     }
 
-    /* Results List */
+    /* Results Section */
     .results-wrapper {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      margin-top: 8px;
     }
 
     .results-header {
@@ -518,7 +281,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 320px;
+      max-width: 280px;
     }
 
     .result-stats {
@@ -578,7 +341,7 @@
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 40;
       width: calc(100% - 48px);
-      max-width: 580px;
+      max-width: 520px;
     }
 
     .floating-bar.visible {
@@ -588,7 +351,7 @@
     }
 
     .floating-bar-inner {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(25px) saturate(190%);
       -webkit-backdrop-filter: blur(25px) saturate(190%);
       border: 1px solid rgba(0, 0, 0, 0.08);
@@ -639,123 +402,51 @@
     .zip-btn:active {
       transform: scale(0.96);
     }
-
-    footer {
-      text-align: center;
-      padding: 24px;
-      font-size: 12px;
-      color: var(--text-tertiary);
-      border-top: 1px solid var(--border-subtle);
-    }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Minimal Header -->
   <header>
-    <div class="nav-inner">
-      <a href="#" class="brand">
-        <div class="brand-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="4 14 10 14 10 20"></polyline>
-            <polyline points="20 10 14 10 14 4"></polyline>
-            <line x1="14" y1="10" x2="21" y2="3"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
-          </svg>
-        </div>
-        <span class="brand-name">Compresso</span>
-      </a>
-
-      <div class="badge-pill">
-        <span class="badge-dot"></span>
-        100% In-Browser & Private
+    <a href="#" class="brand">
+      <div class="brand-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 14 10 14 10 20"></polyline>
+          <polyline points="20 10 14 10 14 4"></polyline>
+          <line x1="14" y1="10" x2="21" y2="3"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
       </div>
-    </div>
+      <span class="brand-name">Compresso</span>
+    </a>
   </header>
 
   <!-- Main Content -->
   <main>
 
-    <!-- Hero -->
+    <!-- Clean Headline -->
     <div class="hero">
-      <h1>Pure compression. <span>Zero compromise.</span></h1>
-      <p>Squeeze iPhone HEIC, JPEG, PNG, and WebP by up to 95%. Everything runs privately inside your browser.</p>
-    </div>
-
-    <!-- Apple Controls Card -->
-    <div class="card">
-      <div class="controls-grid">
-        
-        <!-- Segmented Resolution Control -->
-        <div>
-          <div class="control-label-row">
-            <span>Target Resolution</span>
-            <span style="color: var(--text-tertiary); font-weight: 400;">Smart Downscale</span>
-          </div>
-          <div class="segmented-control">
-            <button type="button" data-res="2560" class="segment-btn active">2K (2560)</button>
-            <button type="button" data-res="1920" class="segment-btn">1080p</button>
-            <button type="button" data-res="3840" class="segment-btn">4K</button>
-            <button type="button" data-res="original" class="segment-btn">Original</button>
-          </div>
-        </div>
-
-        <!-- Quality Slider -->
-        <div>
-          <div class="control-label-row">
-            <span>Image Quality</span>
-            <span id="qualityLabel" class="quality-badge">50% (Recommended)</span>
-          </div>
-          <input type="range" id="qualitySlider" min="20" max="85" value="50">
-          <div class="slider-hint">
-            <span>Smaller File</span>
-            <span>Perfection</span>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="card-divider"></div>
-
-      <!-- EXIF Toggle -->
-      <div class="switch-row">
-        <div class="switch-info">
-          <div class="switch-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
-          </div>
-          <div>
-            <div class="switch-title">Remove Camera & GPS Metadata</div>
-            <div class="switch-desc">Strips location tags, camera serials, and unneeded profiles to save ~100KB per image</div>
-          </div>
-        </div>
-
-        <label class="ios-switch">
-          <input type="checkbox" id="stripExif" checked>
-          <span class="slider-round"></span>
-        </label>
-      </div>
-
+      <h1>Compress images.</h1>
+      <p>Drop photos here to shrink up to 95% in AVIF. Fast, private, in-browser.</p>
     </div>
 
     <!-- Drop Zone -->
     <div id="dropZone" class="drop-zone">
       <div class="drop-icon-wrapper">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="15" x2="12" y2="15"></line>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
       </div>
       <div>
-        <div class="drop-title">Drop photos here, or <span>browse files</span></div>
-        <div class="drop-subtitle">Supports iPhone .HEIC, .JPEG, .PNG, and .WEBP</div>
+        <div class="drop-title">Drop photos here, or <span>browse</span></div>
+        <div class="drop-subtitle">iPhone HEIC, JPEG, PNG, WebP</div>
       </div>
       <input type="file" id="filePicker" multiple accept="image/*,.heic,.heif" style="display: none;">
     </div>
 
-    <!-- Results Section -->
+    <!-- Results Section (Visible only when photos are added) -->
     <div id="resultsWrapper" class="results-wrapper" style="display: none;">
       <div class="results-header">
         <div class="results-title">
@@ -790,11 +481,6 @@
       </button>
     </div>
   </div>
-
-  <!-- Footer -->
-  <footer>
-    Designed with Apple Fluid Design principles • 100% Client-Side Processing • Free & Open
-  </footer>
 
   <script src="app.js"></script>
 </body>

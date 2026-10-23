@@ -1,11 +1,8 @@
-// Compresso — Apple-Inspired Client-Side AVIF Converter
+// Compresso — Ultra-Clean Minimalist Client-Side AVIF Converter
 // 100% Client-side, Zero Server Uploads, Privacy First
 
 const dropZone = document.getElementById('dropZone');
 const filePicker = document.getElementById('filePicker');
-const qualitySlider = document.getElementById('qualitySlider');
-const qualityLabel = document.getElementById('qualityLabel');
-const stripExif = document.getElementById('stripExif');
 const resultsWrapper = document.getElementById('resultsWrapper');
 const resultsList = document.getElementById('resultsList');
 const processedBadge = document.getElementById('processedBadge');
@@ -15,36 +12,16 @@ const statBefore = document.getElementById('statBefore');
 const statAfter = document.getElementById('statAfter');
 const statSaved = document.getElementById('statSaved');
 const downloadZipBtn = document.getElementById('downloadZipBtn');
-const segmentBtns = document.querySelectorAll('.segment-btn');
 
-let activeResolution = '2560';
+// Smart Defaults: 50% Quality (up to 95% squeeze) + 2560px 2K downscale
+const QUALITY = 0.50;
+const MAX_RESOLUTION = 2560;
+
 let processedFiles = [];
 let totalInputBytes = 0;
 let totalOutputBytes = 0;
 
-// 1. Resolution Segmented Control
-segmentBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    segmentBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeResolution = btn.dataset.res;
-  });
-});
-
-// 2. Tactile Quality Slider Feedback
-qualitySlider.addEventListener('input', (e) => {
-  const val = parseInt(e.target.value, 10);
-  let descriptor = 'Recommended';
-  if (val <= 35) descriptor = 'Maximum Squeeze';
-  else if (val <= 45) descriptor = 'Compact';
-  else if (val <= 60) descriptor = 'Recommended';
-  else if (val <= 75) descriptor = 'High Clarity';
-  else descriptor = 'Near Lossless';
-
-  qualityLabel.textContent = `${val}% (${descriptor})`;
-});
-
-// 3. Drag & Drop Direct Manipulation
+// 1. Drag & Drop Direct Manipulation
 dropZone.addEventListener('click', () => filePicker.click());
 
 ['dragenter', 'dragover'].forEach(eventName => {
@@ -52,7 +29,7 @@ dropZone.addEventListener('click', () => filePicker.click());
     e.preventDefault();
     dropZone.style.borderColor = 'var(--blue)';
     dropZone.style.backgroundColor = 'var(--blue-light)';
-    dropZone.style.transform = 'scale(0.99)';
+    dropZone.style.transform = 'translateY(-2px)';
   });
 });
 
@@ -83,7 +60,7 @@ function formatBytes(bytes) {
   return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
-// 4. Batch Pipeline
+// 2. Batch Pipeline
 async function handleBatchUpload(files) {
   resultsWrapper.style.display = 'flex';
 
@@ -92,9 +69,8 @@ async function handleBatchUpload(files) {
   }
 }
 
-// 5. Single Image Processing Pipeline
+// 3. Single Image Processing Pipeline
 async function processSingleImage(file) {
-  const quality = parseInt(qualitySlider.value, 10) / 100;
   const rowId = 'row-' + Math.random().toString(36).substring(2, 9);
   const ext = file.name.split('.').pop().toLowerCase();
 
@@ -145,20 +121,17 @@ async function processSingleImage(file) {
     let width = img.naturalWidth || img.width;
     let height = img.naturalHeight || img.height;
 
-    if (activeResolution !== 'original') {
-      const maxLimit = parseInt(activeResolution, 10);
-      if (width > maxLimit || height > maxLimit) {
-        if (width >= height) {
-          height = Math.round((height * maxLimit) / width);
-          width = maxLimit;
-        } else {
-          width = Math.round((width * maxLimit) / height);
-          height = maxLimit;
-        }
+    if (width > MAX_RESOLUTION || height > MAX_RESOLUTION) {
+      if (width >= height) {
+        height = Math.round((height * MAX_RESOLUTION) / width);
+        width = MAX_RESOLUTION;
+      } else {
+        width = Math.round((width * MAX_RESOLUTION) / height);
+        height = MAX_RESOLUTION;
       }
     }
 
-    // Render to Canvas (Strips metadata automatically)
+    // Render to Canvas (Automatically strips all metadata)
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -172,14 +145,14 @@ async function processSingleImage(file) {
     let outputExt = '.avif';
 
     let outputBlob = await new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), outputFormat, quality);
+      canvas.toBlob((blob) => resolve(blob), outputFormat, QUALITY);
     });
 
     if (!outputBlob || outputBlob.type !== 'image/avif') {
       outputFormat = 'image/webp';
       outputExt = '.webp';
       outputBlob = await new Promise((resolve) => {
-        canvas.toBlob((blob) => resolve(blob), outputFormat, quality);
+        canvas.toBlob((blob) => resolve(blob), outputFormat, QUALITY);
       });
     }
 
@@ -242,7 +215,7 @@ async function processSingleImage(file) {
   }
 }
 
-// 6. Global Stats & Floating Bar
+// 4. Global Stats & Floating Bar
 function updateGlobalStats() {
   processedBadge.textContent = processedFiles.length;
   statBefore.textContent = formatBytes(totalInputBytes);
@@ -259,7 +232,7 @@ function updateGlobalStats() {
   }
 }
 
-// 7. Clear All
+// 5. Clear All
 clearAllBtn.addEventListener('click', () => {
   processedFiles = [];
   totalInputBytes = 0;
@@ -270,7 +243,7 @@ clearAllBtn.addEventListener('click', () => {
   floatingBar.classList.remove('visible');
 });
 
-// 8. Download All as ZIP
+// 6. Download All as ZIP
 downloadZipBtn.addEventListener('click', async () => {
   if (processedFiles.length === 0) return;
 
