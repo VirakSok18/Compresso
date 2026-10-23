@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compresso</title>
 
-  <!-- External libraries for ZIP and HEIC decoding -->
+  <!-- External libraries for ZIP and HEIC decoding with auto-fallback -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>if (typeof JSZip === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\\/script>'); }</script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
   <!-- Ultra-Clean Minimal Apple Design -->

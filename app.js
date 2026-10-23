@@ -243,30 +243,66 @@ clearAllBtn.addEventListener('click', () => {
   floatingBar.classList.remove('visible');
 });
 
-// 6. Download All as ZIP
+// 6. Download All as ZIP (Robust & Instant)
 downloadZipBtn.addEventListener('click', async () => {
-  if (processedFiles.length === 0) return;
+  if (!processedFiles || processedFiles.length === 0) return;
+
+  if (typeof JSZip === 'undefined') {
+    alert('ZIP engine is still loading. Please wait a moment and try again.');
+    return;
+  }
 
   downloadZipBtn.disabled = true;
+  downloadZipBtn.style.opacity = '0.7';
   downloadZipBtn.innerHTML = `<span>⏳ Zipping...</span>`;
 
   try {
     const zip = new JSZip();
+    const usedNames = new Set();
+
+    // Deduplicate file names
     for (const item of processedFiles) {
-      zip.file(item.name, item.blob);
+      let fileName = item.name;
+      let counter = 1;
+      const dotIndex = fileName.lastIndexOf('.');
+      const base = dotIndex !== -1 ? fileName.substring(0, dotIndex) : fileName;
+      const ext = dotIndex !== -1 ? fileName.substring(dotIndex) : '';
+
+      while (usedNames.has(fileName)) {
+        fileName = `${base}_${counter}${ext}`;
+        counter++;
+      }
+      usedNames.add(fileName);
+
+      // Store without re-compression (near-instant, AVIF is already compressed)
+      zip.file(fileName, item.blob);
     }
 
-    const zipContent = await zip.generateAsync({ type: 'blob' });
+    const zipContent = await zip.generateAsync({
+      type: 'blob',
+      compression: 'STORE',
+    });
+
     const zipUrl = URL.createObjectURL(zipContent);
-    const a = document.createElement('a');
-    a.href = zipUrl;
-    a.download = `compresso_${Date.now()}.zip`;
-    a.click();
-    URL.revokeObjectURL(zipUrl);
+    const link = document.createElement('a');
+    link.href = zipUrl;
+    link.download = `compresso_${Date.now()}.zip`;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Keep URL alive for 15s so browser download manager finishes saving
+    setTimeout(() => {
+      URL.revokeObjectURL(zipUrl);
+    }, 15000);
+
   } catch (err) {
+    console.error('ZIP Error:', err);
     alert('ZIP generation failed: ' + err.message);
   } finally {
     downloadZipBtn.disabled = false;
+    downloadZipBtn.style.opacity = '1';
     downloadZipBtn.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
